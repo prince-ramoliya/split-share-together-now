@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Users, Calculator, Share2, RotateCcw, Plus, Minus, Sparkles, TrendingUp, CreditCard } from 'lucide-react';
+import { Sun, Moon, Users, Calculator, Share2, RotateCcw, Plus, Minus, Sparkles, TrendingUp, CreditCard, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { Person, calculateExpenseSplit, generateWhatsAppMessage } from '../utils/expenseCalculations';
+import { Person, ExpenseRecord, calculateExpenseSplit, generateWhatsAppMessage } from '../utils/expenseCalculations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,21 +46,48 @@ const ExpenseSplitter = () => {
   const initializePeople = () => {
     const newPeople: Person[] = Array.from({ length: numberOfPeople }, (_, index) => ({
       name: '',
-      amountPaid: 0,
-      description: ''
+      expenses: [{ amountPaid: 0, description: '' }]
     }));
     setPeople(newPeople);
     setCurrentStep('input');
   };
 
-  const updatePerson = (index: number, field: keyof Person, value: string | number) => {
+  const updatePersonName = (personIndex: number, name: string) => {
     const updatedPeople = [...people];
-    updatedPeople[index] = { ...updatedPeople[index], [field]: value };
+    updatedPeople[personIndex] = { ...updatedPeople[personIndex], name };
     setPeople(updatedPeople);
   };
 
+  const updateExpense = (personIndex: number, expenseIndex: number, field: keyof ExpenseRecord, value: string | number) => {
+    const updatedPeople = [...people];
+    const updatedExpenses = [...updatedPeople[personIndex].expenses];
+    updatedExpenses[expenseIndex] = { ...updatedExpenses[expenseIndex], [field]: value };
+    updatedPeople[personIndex] = { ...updatedPeople[personIndex], expenses: updatedExpenses };
+    setPeople(updatedPeople);
+  };
+
+  const addExpense = (personIndex: number) => {
+    const updatedPeople = [...people];
+    updatedPeople[personIndex] = {
+      ...updatedPeople[personIndex],
+      expenses: [...updatedPeople[personIndex].expenses, { amountPaid: 0, description: '' }]
+    };
+    setPeople(updatedPeople);
+  };
+
+  const removeExpense = (personIndex: number, expenseIndex: number) => {
+    const updatedPeople = [...people];
+    if (updatedPeople[personIndex].expenses.length > 1) {
+      updatedPeople[personIndex] = {
+        ...updatedPeople[personIndex],
+        expenses: updatedPeople[personIndex].expenses.filter((_, i) => i !== expenseIndex)
+      };
+      setPeople(updatedPeople);
+    }
+  };
+
   const addPerson = () => {
-    setPeople([...people, { name: '', amountPaid: 0, description: '' }]);
+    setPeople([...people, { name: '', expenses: [{ amountPaid: 0, description: '' }] }]);
     setNumberOfPeople(prev => prev + 1);
   };
 
@@ -85,12 +111,23 @@ const ExpenseSplitter = () => {
       if (!person.name.trim()) {
         errors.push(`Person ${index + 1} name is required`);
       }
-      if (person.amountPaid < 0) {
-        errors.push(`Amount for ${person.name || `Person ${index + 1}`} cannot be negative`);
+      
+      const hasValidExpense = person.expenses.some(expense => expense.amountPaid > 0);
+      if (!hasValidExpense) {
+        errors.push(`${person.name || `Person ${index + 1}`} must have at least one expense with amount greater than 0`);
       }
+
+      person.expenses.forEach((expense, expenseIndex) => {
+        if (expense.amountPaid < 0) {
+          errors.push(`Amount for ${person.name || `Person ${index + 1}`} expense ${expenseIndex + 1} cannot be negative`);
+        }
+      });
     });
 
-    const totalExpense = people.reduce((sum, person) => sum + person.amountPaid, 0);
+    const totalExpense = people.reduce((sum, person) => 
+      sum + person.expenses.reduce((expenseSum, expense) => expenseSum + expense.amountPaid, 0), 0
+    );
+    
     if (totalExpense <= 0) {
       errors.push('Total expense must be greater than 0');
     }
@@ -197,7 +234,7 @@ const ExpenseSplitter = () => {
                 </div>
                 <div className="flex items-center gap-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                   <CreditCard className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Fair Splits</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Multiple Records</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                   <Share2 className="w-4 h-4 text-purple-500" />
@@ -267,21 +304,21 @@ const ExpenseSplitter = () => {
                 Enter Expense Details
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
-                Add names, amounts paid, and descriptions for each person
+                Add names and multiple expense records for each person
               </p>
             </div>
 
             <div className="grid gap-4 md:gap-6">
-              {people.map((person, index) => (
-                <Card key={index} className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2 hover:shadow-lg transition-all">
+              {people.map((person, personIndex) => (
+                <Card key={personIndex} className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2 hover:shadow-lg transition-all">
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center justify-between">
-                      <span className="text-lg">Person {index + 1}</span>
+                      <span className="text-lg">Person {personIndex + 1}</span>
                       {people.length > 2 && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => removePerson(index)}
+                          onClick={() => removePerson(personIndex)}
                           className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
                           Remove
@@ -297,34 +334,57 @@ const ExpenseSplitter = () => {
                       <Input
                         placeholder="Enter name"
                         value={person.name}
-                        onChange={(e) => updatePerson(index, 'name', e.target.value)}
+                        onChange={(e) => updatePersonName(personIndex, e.target.value)}
                         className="text-lg"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                        Amount Paid (₹) *
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        value={person.amountPaid || ''}
-                        onChange={(e) => updatePerson(index, 'amountPaid', parseFloat(e.target.value) || 0)}
-                        className="text-lg"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                        Description (Optional)
-                      </label>
-                      <Input
-                        placeholder="e.g., Hotel, Food, Taxi"
-                        value={person.description}
-                        onChange={(e) => updatePerson(index, 'description', e.target.value)}
-                        className="text-lg"
-                      />
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Expenses
+                        </label>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addExpense(personIndex)}
+                          className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add Expense
+                        </Button>
+                      </div>
+                      
+                      {person.expenses.map((expense, expenseIndex) => (
+                        <div key={expenseIndex} className="flex gap-2 items-start p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <div className="flex-1">
+                            <Input
+                              type="number"
+                              placeholder="Amount (₹)"
+                              value={expense.amountPaid || ''}
+                              onChange={(e) => updateExpense(personIndex, expenseIndex, 'amountPaid', parseFloat(e.target.value) || 0)}
+                              className="mb-2"
+                              min="0"
+                              step="0.01"
+                            />
+                            <Input
+                              placeholder="Description (e.g., Hotel, Food)"
+                              value={expense.description}
+                              onChange={(e) => updateExpense(personIndex, expenseIndex, 'description', e.target.value)}
+                            />
+                          </div>
+                          {person.expenses.length > 1 && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => removeExpense(personIndex, expenseIndex)}
+                              className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 mt-1"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -397,28 +457,41 @@ const ExpenseSplitter = () => {
                 <CardTitle>💳 Individual Contributions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {results.balances.map((person, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">{person.name}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          Paid: ₹{person.amountPaid}
-                          {person.description && ` (${person.description})`}
-                        </p>
+                    <div key={index} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-lg">{person.name}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Total Paid: ₹{person.totalPaid}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-bold text-lg ${person.balance > 0.01 ? 'text-green-600' : person.balance < -0.01 ? 'text-red-600' : 'text-gray-600'}`}>
+                            {person.balance > 0.01 ? `+₹${Math.abs(person.balance).toFixed(2)}` : 
+                             person.balance < -0.01 ? `-₹${Math.abs(person.balance).toFixed(2)}` : 
+                             '₹0.00'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {person.balance > 0.01 ? 'Should receive' : 
+                             person.balance < -0.01 ? 'Should pay' : 
+                             'Balanced'}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className={`font-bold ${person.balance > 0.01 ? 'text-green-600' : person.balance < -0.01 ? 'text-red-600' : 'text-gray-600'}`}>
-                          {person.balance > 0.01 ? `+₹${Math.abs(person.balance).toFixed(2)}` : 
-                           person.balance < -0.01 ? `-₹${Math.abs(person.balance).toFixed(2)}` : 
-                           '₹0.00'}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {person.balance > 0.01 ? 'Should receive' : 
-                           person.balance < -0.01 ? 'Should pay' : 
-                           'Balanced'}
-                        </p>
-                      </div>
+                      
+                      {person.expenses.length > 0 && (
+                        <div className="space-y-1 mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Expense Details:</p>
+                          {person.expenses.map((expense, expenseIndex) => (
+                            <div key={expenseIndex} className="flex justify-between text-sm text-gray-600 dark:text-gray-300">
+                              <span>{expense.description || `Expense ${expenseIndex + 1}`}</span>
+                              <span>₹{expense.amountPaid}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

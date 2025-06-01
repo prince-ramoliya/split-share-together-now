@@ -1,14 +1,18 @@
 
-export interface Person {
-  name: string;
+export interface ExpenseRecord {
   amountPaid: number;
   description: string;
 }
 
+export interface Person {
+  name: string;
+  expenses: ExpenseRecord[];
+}
+
 export interface Balance {
   name: string;
-  amountPaid: number;
-  description: string;
+  totalPaid: number;
+  expenses: ExpenseRecord[];
   balance: number;
   owes: Array<{ to: string; amount: number }>;
   shouldReceive: Array<{ from: string; amount: number }>;
@@ -20,16 +24,26 @@ export const calculateExpenseSplit = (people: Person[]): {
   perPersonShare: number;
   transactions: Array<{ from: string; to: string; amount: number }>;
 } => {
-  const totalExpense = people.reduce((sum, person) => sum + person.amountPaid, 0);
+  // Calculate total amount paid by each person
+  const balances: Balance[] = people.map(person => {
+    const totalPaid = person.expenses.reduce((sum, expense) => sum + expense.amountPaid, 0);
+    return {
+      name: person.name,
+      totalPaid,
+      expenses: person.expenses,
+      balance: 0,
+      owes: [],
+      shouldReceive: []
+    };
+  });
+
+  const totalExpense = balances.reduce((sum, person) => sum + person.totalPaid, 0);
   const perPersonShare = totalExpense / people.length;
 
   // Calculate individual balances
-  const balances: Balance[] = people.map(person => ({
-    ...person,
-    balance: person.amountPaid - perPersonShare,
-    owes: [],
-    shouldReceive: []
-  }));
+  balances.forEach(person => {
+    person.balance = person.totalPaid - perPersonShare;
+  });
 
   // Calculate who owes whom
   const debtors = balances.filter(person => person.balance < 0);
@@ -75,11 +89,14 @@ export const generateWhatsAppMessage = (
   
   message += "📋 *What everyone paid:*\n";
   balances.forEach(person => {
-    message += `• ${person.name}: ₹${person.amountPaid}`;
-    if (person.description) {
-      message += ` (${person.description})`;
-    }
-    message += "\n";
+    message += `• ${person.name}: ₹${person.totalPaid}\n`;
+    person.expenses.forEach(expense => {
+      if (expense.description) {
+        message += `  - ₹${expense.amountPaid} (${expense.description})\n`;
+      } else {
+        message += `  - ₹${expense.amountPaid}\n`;
+      }
+    });
   });
 
   message += `\n💸 *Total Expense:* ₹${totalExpense}\n`;
