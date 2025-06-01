@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit2, Trash2, Calendar, Users, DollarSign, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,7 +40,14 @@ const HistoryPage = ({ onBack, onLoadExpense }: HistoryPageProps) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setHistory(data || []);
+      
+      // Type cast the Json data to our expected format
+      const typedData = (data || []).map(item => ({
+        ...item,
+        expense_data: item.expense_data as Person[]
+      }));
+      
+      setHistory(typedData);
     } catch (error: any) {
       toast({
         title: "Error",
