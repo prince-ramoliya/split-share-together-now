@@ -44,7 +44,7 @@ const HistoryPage = ({ onBack, onLoadExpense }: HistoryPageProps) => {
       // Type cast the Json data to our expected format
       const typedData = (data || []).map(item => ({
         ...item,
-        expense_data: item.expense_data as Person[]
+        expense_data: item.expense_data as unknown as Person[]
       }));
       
       setHistory(typedData);

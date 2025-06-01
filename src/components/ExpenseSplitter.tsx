@@ -55,6 +55,29 @@ const ExpenseSplitter = () => {
     }
   }, [people, currentStep, expenseName, user]);
 
+  // Auto-save to history when results are calculated
+  useEffect(() => {
+    if (currentStep === 'results' && people.length > 0 && user) {
+      const autoSaveToHistory = async () => {
+        const results = calculateExpenseSplit(people);
+        const saveResult = await saveExpenseHistory(
+          people,
+          results.totalExpense,
+          results.perPersonShare,
+          expenseName || 'Untitled Split'
+        );
+
+        if (saveResult.success) {
+          console.log('Expense automatically saved to history');
+        } else {
+          console.error('Failed to auto-save expense:', saveResult.error);
+        }
+      };
+
+      autoSaveToHistory();
+    }
+  }, [currentStep, people, expenseName, user]);
+
   const handleAuthSuccess = () => {
     // Auth success is handled by the useAuth hook
   };
