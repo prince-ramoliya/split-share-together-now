@@ -1,47 +1,127 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Users, Calculator, Share2, RotateCcw, Plus, Minus, Sparkles, TrendingUp, CreditCard, X } from 'lucide-react';
+import { Sun, Moon, Users, Calculator, Share2, RotateCcw, Plus, Minus, Sparkles, TrendingUp, CreditCard, X, LogOut, History, Save } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../hooks/useAuth';
 import { Person, ExpenseRecord, calculateExpenseSplit, generateWhatsAppMessage } from '../utils/expenseCalculations';
+import { saveExpenseHistory } from '../utils/historyUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
+import AuthPage from './AuthPage';
+import HistoryPage from './HistoryPage';
 
 type AppStep = 'landing' | 'input' | 'results';
+type AppView = 'main' | 'history';
 
 const ExpenseSplitter = () => {
   const { theme, toggleTheme } = useTheme();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const [currentView, setCurrentView] = useState<AppView>('main');
   const [currentStep, setCurrentStep] = useState<AppStep>('landing');
   const [numberOfPeople, setNumberOfPeople] = useState<number>(2);
   const [people, setPeople] = useState<Person[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [expenseName, setExpenseName] = useState<string>('');
 
   // Load data from localStorage on mount
   useEffect(() => {
-    const savedData = localStorage.getItem('expense-splitter-data');
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        if (parsed.people?.length > 0) {
-          setPeople(parsed.people);
-          setNumberOfPeople(parsed.people.length);
-          setCurrentStep(parsed.currentStep || 'input');
+    if (user) {
+      const savedData = localStorage.getItem(`expense-splitter-data-${user.id}`);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          if (parsed.people?.length > 0) {
+            setPeople(parsed.people);
+            setNumberOfPeople(parsed.people.length);
+            setCurrentStep(parsed.currentStep || 'input');
+            setExpenseName(parsed.expenseName || '');
+          }
+        } catch (error) {
+          console.error('Error loading saved data:', error);
         }
-      } catch (error) {
-        console.error('Error loading saved data:', error);
       }
     }
-  }, []);
+  }, [user]);
 
   // Save data to localStorage whenever people data changes
   useEffect(() => {
-    if (people.length > 0) {
-      localStorage.setItem('expense-splitter-data', JSON.stringify({
+    if (user && people.length > 0) {
+      localStorage.setItem(`expense-splitter-data-${user.id}`, JSON.stringify({
         people,
-        currentStep
+        currentStep,
+        expenseName
       }));
     }
-  }, [people, currentStep]);
+  }, [people, currentStep, expenseName, user]);
+
+  const handleAuthSuccess = () => {
+    // Auth success is handled by the useAuth hook
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setPeople([]);
+      setNumberOfPeople(2);
+      setCurrentStep('landing');
+      setCurrentView('main');
+      setExpenseName('');
+      if (user) {
+        localStorage.removeItem(`expense-splitter-data-${user.id}`);
+      }
+      toast({
+        title: "Signed out",
+        description: "You've been signed out successfully"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleLoadExpense = (expenseData: Person[], name: string) => {
+    setPeople(expenseData);
+    setNumberOfPeople(expenseData.length);
+    setExpenseName(name);
+    setCurrentStep('input');
+    setCurrentView('main');
+  };
+
+  const handleSaveExpense = async () => {
+    if (people.length === 0) {
+      toast({
+        title: "Error",
+        description: "No expense data to save",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const results = calculateExpenseSplit(people);
+    const saveResult = await saveExpenseHistory(
+      people,
+      results.totalExpense,
+      results.perPersonShare,
+      expenseName || 'Untitled Split'
+    );
+
+    if (saveResult.success) {
+      toast({
+        title: "Success",
+        description: "Expense saved to history"
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to save expense",
+        variant: "destructive"
+      });
+    }
+  };
 
   const initializePeople = () => {
     const newPeople: Person[] = Array.from({ length: numberOfPeople }, (_, index) => ({
@@ -159,12 +239,31 @@ const ExpenseSplitter = () => {
     setPeople([]);
     setNumberOfPeople(2);
     setCurrentStep('landing');
-    localStorage.removeItem('expense-splitter-data');
+    setExpenseName('');
+    if (user) {
+      localStorage.removeItem(`expense-splitter-data-${user.id}`);
+    }
     toast({
       title: "Reset Complete",
       description: "All data has been cleared"
     });
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-800 dark:to-purple-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+  }
+
+  if (currentView === 'history') {
+    return <HistoryPage onBack={() => setCurrentView('main')} onLoadExpense={handleLoadExpense} />;
+  }
 
   const results = currentStep === 'results' ? calculateExpenseSplit(people) : null;
 
@@ -182,8 +281,16 @@ const ExpenseSplitter = () => {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
       </div>
 
-      {/* Theme Toggle */}
-      <div className="absolute top-6 right-6 z-10">
+      {/* Top Navigation */}
+      <div className="absolute top-6 right-6 z-10 flex items-center space-x-3">
+        <Button
+          variant="outline"
+          onClick={() => setCurrentView('history')}
+          className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-2 border-white/20 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
+        >
+          <History className="h-4 w-4 mr-2" />
+          History
+        </Button>
         <Button
           variant="outline"
           size="icon"
@@ -192,12 +299,21 @@ const ExpenseSplitter = () => {
         >
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </Button>
+        <Button
+          variant="outline"
+          onClick={handleSignOut}
+          className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-2 border-white/20 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
         {/* Landing Page */}
         {currentStep === 'landing' && (
           <div className="flex flex-col items-center justify-center min-h-[80vh] text-center space-y-12 animate-fade-in">
+            {/* Hero Icon */}
             <div className="space-y-8">
               {/* Hero Icon */}
               <div className="relative mx-auto">
@@ -308,6 +424,21 @@ const ExpenseSplitter = () => {
               </p>
             </div>
 
+            {/* Expense Name Input */}
+            <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2">
+              <CardHeader>
+                <CardTitle>Expense Name</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Input
+                  placeholder="Enter a name for this expense split (e.g., 'Trip to Goa', 'Weekend Getaway')"
+                  value={expenseName}
+                  onChange={(e) => setExpenseName(e.target.value)}
+                  className="text-lg"
+                />
+              </CardContent>
+            </Card>
+
             <div className="grid gap-4 md:gap-6">
               {people.map((person, personIndex) => (
                 <Card key={personIndex} className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2 hover:shadow-lg transition-all">
@@ -400,6 +531,15 @@ const ExpenseSplitter = () => {
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Another Person
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={handleSaveExpense}
+                className="w-full sm:w-auto"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save to History
               </Button>
 
               <Button
@@ -538,6 +678,15 @@ const ExpenseSplitter = () => {
               >
                 <Share2 className="mr-2 h-5 w-5" />
                 Share on WhatsApp
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={handleSaveExpense}
+                className="px-8 py-3 text-lg rounded-full"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save to History
               </Button>
               
               <Button
