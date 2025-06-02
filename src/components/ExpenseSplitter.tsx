@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, History, LogOut } from 'lucide-react';
+import { Sun, Moon, History, LogOut, User } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 import { Person, ExpenseRecord, calculateExpenseSplit, generateWhatsAppMessage } from '../utils/expenseCalculations';
@@ -19,6 +19,7 @@ type AppView = 'main' | 'history';
 const ExpenseSplitter = () => {
   const { theme, toggleTheme } = useTheme();
   const { user, loading: authLoading, signOut } = useAuth();
+  const [isGuestMode, setIsGuestMode] = useState(false);
   const [currentView, setCurrentView] = useState<AppView>('main');
   const [currentStep, setCurrentStep] = useState<AppStep>('landing');
   const [numberOfPeople, setNumberOfPeople] = useState<number>(2);
@@ -28,38 +29,38 @@ const ExpenseSplitter = () => {
 
   // Load data from localStorage on mount
   useEffect(() => {
-    if (user) {
-      const savedData = localStorage.getItem(`expense-splitter-data-${user.id}`);
-      if (savedData) {
-        try {
-          const parsed = JSON.parse(savedData);
-          if (parsed.people?.length > 0) {
-            setPeople(parsed.people);
-            setNumberOfPeople(parsed.people.length);
-            setCurrentStep(parsed.currentStep || 'input');
-            setExpenseName(parsed.expenseName || '');
-          }
-        } catch (error) {
-          console.error('Error loading saved data:', error);
+    const storageKey = user ? `expense-splitter-data-${user.id}` : 'expense-splitter-data-guest';
+    const savedData = localStorage.getItem(storageKey);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.people?.length > 0) {
+          setPeople(parsed.people);
+          setNumberOfPeople(parsed.people.length);
+          setCurrentStep(parsed.currentStep || 'input');
+          setExpenseName(parsed.expenseName || '');
         }
+      } catch (error) {
+        console.error('Error loading saved data:', error);
       }
     }
-  }, [user]);
+  }, [user, isGuestMode]);
 
   // Save data to localStorage whenever people data changes
   useEffect(() => {
-    if (user && people.length > 0) {
-      localStorage.setItem(`expense-splitter-data-${user.id}`, JSON.stringify({
+    if (people.length > 0) {
+      const storageKey = user ? `expense-splitter-data-${user.id}` : 'expense-splitter-data-guest';
+      localStorage.setItem(storageKey, JSON.stringify({
         people,
         currentStep,
         expenseName
       }));
     }
-  }, [people, currentStep, expenseName, user]);
+  }, [people, currentStep, expenseName, user, isGuestMode]);
 
-  // Auto-save to history when results are calculated
+  // Auto-save to history when results are calculated (only for authenticated users)
   useEffect(() => {
-    if (currentStep === 'results' && people.length > 0 && user) {
+    if (currentStep === 'results' && people.length > 0 && user && !isGuestMode) {
       const autoSaveToHistory = async () => {
         const results = calculateExpenseSplit(people);
         const saveResult = await saveExpenseHistory(
@@ -78,23 +79,31 @@ const ExpenseSplitter = () => {
 
       autoSaveToHistory();
     }
-  }, [currentStep, people, expenseName, user]);
+  }, [currentStep, people, expenseName, user, isGuestMode]);
 
   const handleAuthSuccess = () => {
-    // Auth success is handled by the useAuth hook
+    setIsGuestMode(false);
+  };
+
+  const handleSkipAuth = () => {
+    setIsGuestMode(true);
   };
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      if (!isGuestMode) {
+        await signOut();
+      }
       setPeople([]);
       setNumberOfPeople(2);
       setCurrentStep('landing');
       setCurrentView('main');
       setExpenseName('');
-      if (user) {
-        localStorage.removeItem(`expense-splitter-data-${user.id}`);
-      }
+      setIsGuestMode(false);
+      
+      const storageKey = user ? `expense-splitter-data-${user.id}` : 'expense-splitter-data-guest';
+      localStorage.removeItem(storageKey);
+      
       toast({
         title: "Signed out",
         description: "You've been signed out successfully"
@@ -117,6 +126,15 @@ const ExpenseSplitter = () => {
   };
 
   const handleSaveExpense = async () => {
+    if (isGuestMode) {
+      toast({
+        title: "Guest Mode",
+        description: "Sign in to save expenses to history",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (people.length === 0) {
       toast({
         title: "Error",
@@ -282,11 +300,20 @@ const ExpenseSplitter = () => {
     );
   }
 
-  if (!user) {
-    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+  if (!user && !isGuestMode) {
+    return <AuthPage onAuthSuccess={handleAuthSuccess} onSkipAuth={handleSkipAuth} />;
   }
 
   if (currentView === 'history') {
+    if (isGuestMode) {
+      toast({
+        title: "Guest Mode",
+        description: "Sign in to access expense history",
+        variant: "destructive"
+      });
+      setCurrentView('main');
+      return null;
+    }
     return <HistoryPage onBack={() => setCurrentView('main')} onLoadExpense={handleLoadExpense} />;
   }
 
@@ -308,14 +335,16 @@ const ExpenseSplitter = () => {
 
       {/* Top Navigation */}
       <div className="absolute top-6 right-6 z-10 flex items-center space-x-3">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentView('history')}
-          className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-2 border-white/20 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
-        >
-          <History className="h-4 w-4 mr-2" />
-          History
-        </Button>
+        {!isGuestMode && (
+          <Button
+            variant="outline"
+            onClick={() => setCurrentView('history')}
+            className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-2 border-white/20 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
+          >
+            <History className="h-4 w-4 mr-2" />
+            History
+          </Button>
+        )}
         <Button
           variant="outline"
           size="icon"
@@ -329,10 +358,19 @@ const ExpenseSplitter = () => {
           onClick={handleSignOut}
           className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-2 border-white/20 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
         >
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
+          {isGuestMode ? <User className="h-4 w-4 mr-2" /> : <LogOut className="h-4 w-4 mr-2" />}
+          {isGuestMode ? 'Sign In' : 'Sign Out'}
         </Button>
       </div>
+
+      {/* Guest Mode Indicator */}
+      {isGuestMode && (
+        <div className="absolute top-6 left-6 z-10">
+          <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 px-3 py-1 rounded-full text-sm font-medium border border-amber-200 dark:border-amber-800">
+            Guest Mode - History disabled
+          </div>
+        </div>
+      )}
 
       <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
         {currentStep === 'landing' && (
@@ -357,6 +395,7 @@ const ExpenseSplitter = () => {
             onCalculate={validateAndCalculate}
             onSave={handleSaveExpense}
             isCalculating={isCalculating}
+            isGuestMode={isGuestMode}
           />
         )}
 
@@ -367,6 +406,7 @@ const ExpenseSplitter = () => {
             onSave={handleSaveExpense}
             onEdit={() => setCurrentStep('input')}
             onReset={resetApp}
+            isGuestMode={isGuestMode}
           />
         )}
       </div>

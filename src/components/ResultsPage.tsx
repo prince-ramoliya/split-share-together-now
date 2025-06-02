@@ -1,113 +1,150 @@
 
 import React from 'react';
-import { Share2, Save, RotateCcw } from 'lucide-react';
-import { Balance } from '../utils/expenseCalculations';
+import { ArrowLeft, Share, Save, Edit3, RotateCcw, DollarSign, TrendingUp, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+interface ExpenseSplitResults {
+  balances: Record<string, number>;
+  totalExpense: number;
+  perPersonShare: number;
+  transactions: Array<{
+    from: string;
+    to: string;
+    amount: number;
+  }>;
+}
+
 interface ResultsPageProps {
-  results: {
-    balances: Balance[];
-    totalExpense: number;
-    perPersonShare: number;
-    transactions: Array<{ from: string; to: string; amount: number }>;
-  };
+  results: ExpenseSplitResults;
   onShareWhatsApp: () => void;
   onSave: () => void;
   onEdit: () => void;
   onReset: () => void;
+  isGuestMode?: boolean;
 }
 
-const ResultsPage = ({ results, onShareWhatsApp, onSave, onEdit, onReset }: ResultsPageProps) => {
+const ResultsPage = ({ 
+  results, 
+  onShareWhatsApp, 
+  onSave, 
+  onEdit, 
+  onReset,
+  isGuestMode = false
+}: ResultsPageProps) => {
+  const { balances, totalExpense, perPersonShare, transactions } = results;
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-          💰 Final Split Results
-        </h2>
-        <p className="text-gray-600 dark:text-gray-300">
-          Here's how the expenses should be settled
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          Expense Split Results
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          Here's how much everyone owes and who should pay whom.
         </p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0">
-          <CardContent className="p-6 text-center">
-            <h3 className="text-lg font-medium mb-2">Total Expense</h3>
-            <p className="text-3xl font-bold">₹{results.totalExpense}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-800">
+          <CardContent className="py-6">
+            <div className="flex items-center">
+              <DollarSign className="w-8 h-8 text-green-600 mr-3" />
+              <div>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">₹{totalExpense.toFixed(2)}</p>
+                <p className="text-green-600 dark:text-green-300 text-sm">Total Expense</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-r from-green-500 to-teal-600 text-white border-0">
-          <CardContent className="p-6 text-center">
-            <h3 className="text-lg font-medium mb-2">Per Person Share</h3>
-            <p className="text-3xl font-bold">₹{results.perPersonShare}</p>
+
+        <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-2 border-blue-200 dark:border-blue-800">
+          <CardContent className="py-6">
+            <div className="flex items-center">
+              <Users className="w-8 h-8 text-blue-600 mr-3" />
+              <div>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">₹{perPersonShare.toFixed(2)}</p>
+                <p className="text-blue-600 dark:text-blue-300 text-sm">Per Person</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border-2 border-purple-200 dark:border-purple-800">
+          <CardContent className="py-6">
+            <div className="flex items-center">
+              <TrendingUp className="w-8 h-8 text-purple-600 mr-3" />
+              <div>
+                <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">{transactions.length}</p>
+                <p className="text-purple-600 dark:text-purple-300 text-sm">Transactions</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Individual Contributions */}
+      {/* Individual Balances */}
       <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2">
         <CardHeader>
-          <CardTitle>💳 Individual Contributions</CardTitle>
+          <CardTitle className="text-xl">Individual Balances</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {results.balances.map((person, index) => (
-              <div key={index} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white text-lg">{person.name}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Total Paid: ₹{person.totalPaid}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-bold text-lg ${person.balance > 0.01 ? 'text-green-600' : person.balance < -0.01 ? 'text-red-600' : 'text-gray-600'}`}>
-                      {person.balance > 0.01 ? `+₹${Math.abs(person.balance).toFixed(2)}` : 
-                       person.balance < -0.01 ? `-₹${Math.abs(person.balance).toFixed(2)}` : 
-                       '₹0.00'}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {person.balance > 0.01 ? 'Should receive' : 
-                       person.balance < -0.01 ? 'Should pay' : 
-                       'Balanced'}
-                    </p>
-                  </div>
-                </div>
-                
-                {person.expenses.length > 0 && (
-                  <div className="space-y-1 mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Expense Details:</p>
-                    {person.expenses.map((expense, expenseIndex) => (
-                      <div key={expenseIndex} className="flex justify-between text-sm text-gray-600 dark:text-gray-300">
-                        <span>{expense.description || `Expense ${expenseIndex + 1}`}</span>
-                        <span>₹{expense.amountPaid}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          <div className="grid gap-3">
+            {Object.entries(balances).map(([person, balance]) => (
+              <div
+                key={person}
+                className={`flex justify-between items-center p-4 rounded-lg ${
+                  balance > 0
+                    ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                    : balance < 0
+                    ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                    : 'bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600'
+                }`}
+              >
+                <span className="font-medium text-gray-900 dark:text-white">{person}</span>
+                <span
+                  className={`font-bold ${
+                    balance > 0
+                      ? 'text-green-700 dark:text-green-400'
+                      : balance < 0
+                      ? 'text-red-700 dark:text-red-400'
+                      : 'text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  {balance > 0 ? `+₹${balance.toFixed(2)}` : balance < 0 ? `-₹${Math.abs(balance).toFixed(2)}` : '₹0.00'}
+                </span>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Settlement Instructions */}
-      {results.transactions.length > 0 && (
+      {/* Transactions */}
+      {transactions.length > 0 && (
         <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2">
           <CardHeader>
-            <CardTitle>🔄 Settlement Instructions</CardTitle>
+            <CardTitle className="text-xl">Who Owes Whom</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {results.transactions.map((transaction, index) => (
-                <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400">
-                  <p className="text-gray-900 dark:text-white">
-                    <span className="font-medium">{transaction.from}</span> should pay{' '}
-                    <span className="font-bold text-yellow-700 dark:text-yellow-400">₹{transaction.amount}</span> to{' '}
-                    <span className="font-medium">{transaction.to}</span>
-                  </p>
+              {transactions.map((transaction, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">{index + 1}</span>
+                    </div>
+                    <span className="text-gray-900 dark:text-white">
+                      <strong>{transaction.from}</strong> owes <strong>{transaction.to}</strong>
+                    </span>
+                  </div>
+                  <span className="font-bold text-orange-700 dark:text-orange-400 text-lg">
+                    ₹{transaction.amount.toFixed(2)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -115,52 +152,55 @@ const ResultsPage = ({ results, onShareWhatsApp, onSave, onEdit, onReset }: Resu
         </Card>
       )}
 
-      {results.transactions.length === 0 && (
-        <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-          <CardContent className="p-6 text-center">
-            <p className="text-green-800 dark:text-green-200 font-medium text-lg">
-              ✅ All expenses are perfectly balanced! No settlements needed.
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-4 justify-center">
+        <Button
+          variant="outline"
+          onClick={onEdit}
+          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200"
+        >
+          <Edit3 className="w-4 h-4 mr-2" />
+          Edit Expenses
+        </Button>
+
+        {!isGuestMode && (
+          <Button
+            variant="outline"
+            onClick={onSave}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Save to History
+          </Button>
+        )}
+
+        <Button
+          onClick={onShareWhatsApp}
+          className="bg-green-600 hover:bg-green-700 text-white hover:scale-105 transition-transform duration-200"
+        >
+          <Share className="w-4 h-4 mr-2" />
+          Share on WhatsApp
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={onReset}
+          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:scale-105 transition-transform duration-200"
+        >
+          <RotateCcw className="w-4 w-4 mr-2" />
+          Start Over
+        </Button>
+      </div>
+
+      {isGuestMode && (
+        <Card className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800">
+          <CardContent className="py-4">
+            <p className="text-amber-800 dark:text-amber-200 text-sm text-center">
+              <strong>Guest Mode:</strong> Sign in to save this expense split to your history and access it later.
             </p>
           </CardContent>
         </Card>
       )}
-
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button
-          onClick={onShareWhatsApp}
-          className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3 text-lg rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
-        >
-          <Share2 className="mr-2 h-5 w-5" />
-          Share on WhatsApp
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={onSave}
-          className="px-8 py-3 text-lg rounded-full"
-        >
-          <Save className="mr-2 h-4 w-4" />
-          Save to History
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={onEdit}
-          className="px-8 py-3 text-lg rounded-full"
-        >
-          Edit Details
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={onReset}
-          className="px-8 py-3 text-lg rounded-full text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
-        >
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Start Over
-        </Button>
-      </div>
     </div>
   );
 };

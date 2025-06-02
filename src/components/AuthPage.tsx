@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Calculator } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Calculator, UserX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,9 +9,10 @@ import { toast } from '@/hooks/use-toast';
 
 interface AuthPageProps {
   onAuthSuccess: () => void;
+  onSkipAuth: () => void;
 }
 
-const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
+const AuthPage = ({ onAuthSuccess, onSkipAuth }: AuthPageProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -101,6 +102,14 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleSkipAuth = () => {
+    toast({
+      title: "Using as Guest",
+      description: "You can split expenses but won't be able to save history.",
+    });
+    onSkipAuth();
+  };
+
   return (
     <div className="min-h-screen font-dm-sans relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-800 dark:to-purple-900 transition-all duration-500">
       {/* Background Elements */}
@@ -127,6 +136,30 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {/* Skip Authentication Button */}
+            <Button
+              onClick={handleSkipAuth}
+              variant="outline"
+              className="w-full py-3 text-lg font-semibold rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-300 transition-all duration-300"
+            >
+              <div className="flex items-center">
+                <UserX className="w-5 h-5 mr-3" />
+                Continue as Guest
+              </div>
+            </Button>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+                  Or sign in to save history
+                </span>
+              </div>
+            </div>
+
             {/* Google Authentication Button */}
             <Button
               onClick={handleGoogleAuth}
@@ -252,6 +285,11 @@ const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
               >
                 {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </button>
+            </div>
+
+            {/* Guest Mode Notice */}
+            <div className="text-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+              <strong>Guest Mode:</strong> Split expenses without signing up, but you won't be able to save or access history.
             </div>
           </CardContent>
         </Card>
