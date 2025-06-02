@@ -272,8 +272,8 @@ const ExpenseSplitter = () => {
   };
 
   const shareOnWhatsApp = () => {
-    const { balances, totalExpense, perPersonShare, transactions } = calculateExpenseSplit(people);
-    const message = generateWhatsAppMessage(balances, totalExpense, perPersonShare, transactions);
+    const calculationResults = calculateExpenseSplit(people);
+    const message = generateWhatsAppMessage(calculationResults.balances, calculationResults.totalExpense, calculationResults.perPersonShare, calculationResults.transactions);
     const whatsappUrl = `https://wa.me/?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
