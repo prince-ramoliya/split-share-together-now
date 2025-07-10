@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { ArrowLeft, Share, Save, Edit3, RotateCcw, DollarSign, TrendingUp, Users } from 'lucide-react';
+import { ArrowLeft, Share, Save, Edit3, RotateCcw, DollarSign, TrendingUp, Users, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 
 interface ExpenseSplitResults {
   balances: Record<string, number>;
@@ -33,6 +34,48 @@ const ResultsPage = ({
   isGuestMode = false
 }: ResultsPageProps) => {
   const { balances, totalExpense, perPersonShare, transactions } = results;
+  const { toast } = useToast();
+
+  const copyResults = async () => {
+    let copyText = "💰 *Expense Split Summary*\n\n";
+    
+    copyText += "📋 *Individual Balances:*\n";
+    Object.entries(balances).forEach(([person, balance]) => {
+      if (balance > 0) {
+        copyText += `• ${person}: +₹${balance.toFixed(2)} (should receive)\n`;
+      } else if (balance < 0) {
+        copyText += `• ${person}: -₹${Math.abs(balance).toFixed(2)} (owes)\n`;
+      } else {
+        copyText += `• ${person}: ₹0.00 (balanced)\n`;
+      }
+    });
+
+    copyText += `\n💸 *Total Expense:* ₹${totalExpense.toFixed(2)}\n`;
+    copyText += `👥 *Per Person Share:* ₹${perPersonShare.toFixed(2)}\n\n`;
+
+    if (transactions.length > 0) {
+      copyText += "💳 *Settlement Required:*\n";
+      transactions.forEach(transaction => {
+        copyText += `• ${transaction.from} should pay ₹${transaction.amount.toFixed(2)} to ${transaction.to}\n`;
+      });
+    } else {
+      copyText += "✅ All expenses are already balanced!\n";
+    }
+
+    try {
+      await navigator.clipboard.writeText(copyText);
+      toast({
+        title: "Results Copied!",
+        description: "Expense split results copied to clipboard.",
+      });
+    } catch (error) {
+      toast({
+        title: "Copy Failed",
+        description: "Could not copy to clipboard. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -173,6 +216,15 @@ const ResultsPage = ({
             Save to History
           </Button>
         )}
+
+        <Button
+          onClick={copyResults}
+          variant="outline"
+          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200"
+        >
+          <Copy className="w-4 h-4 mr-2" />
+          Copy Results
+        </Button>
 
         <Button
           onClick={onShareWhatsApp}
