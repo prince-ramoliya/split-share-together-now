@@ -81,10 +81,10 @@ const ResultsPage = ({
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
           Expense Split Results
         </h1>
-        <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+        <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
           Here's how much everyone owes and who should pay whom.
         </p>
       </div>
@@ -196,52 +196,56 @@ const ResultsPage = ({
       )}
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap gap-4 justify-center">
-        <Button
-          variant="outline"
-          onClick={onEdit}
-          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200"
-        >
-          <Edit3 className="w-4 h-4 mr-2" />
-          Edit Expenses
-        </Button>
-
-        {!isGuestMode && (
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Button
             variant="outline"
-            onClick={onSave}
-            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200"
+            onClick={onEdit}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
           >
-            <Save className="w-4 h-4 mr-2" />
-            Save to History
+            <Edit3 className="w-4 h-4 mr-2" />
+            Edit Expenses
           </Button>
-        )}
 
-        <Button
-          onClick={copyResults}
-          variant="outline"
-          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200"
-        >
-          <Copy className="w-4 h-4 mr-2" />
-          Copy Results
-        </Button>
+          {!isGuestMode && (
+            <Button
+              variant="outline"
+              onClick={onSave}
+              className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save to History
+            </Button>
+          )}
 
-        <Button
-          onClick={onShareWhatsApp}
-          className="bg-green-600 hover:bg-green-700 text-white hover:scale-105 transition-transform duration-200"
-        >
-          <Share className="w-4 h-4 mr-2" />
-          Share on WhatsApp
-        </Button>
+          <Button
+            onClick={copyResults}
+            variant="outline"
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
+          >
+            <Copy className="w-4 h-4 mr-2" />
+            Copy Results
+          </Button>
+        </div>
 
-        <Button
-          variant="outline"
-          onClick={onReset}
-          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:scale-105 transition-transform duration-200"
-        >
-          <RotateCcw className="w-4 w-4 mr-2" />
-          Start Over
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button
+            onClick={onShareWhatsApp}
+            className="bg-green-600 hover:bg-green-700 text-white hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
+          >
+            <Share className="w-4 h-4 mr-2" />
+            Share on WhatsApp
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={onReset}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
+          >
+            <RotateCcw className="w-4 w-4 mr-2" />
+            Start Over
+          </Button>
+        </div>
       </div>
 
       {isGuestMode && (

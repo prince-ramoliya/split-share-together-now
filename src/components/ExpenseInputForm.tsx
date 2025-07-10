@@ -45,10 +45,10 @@ const ExpenseInputForm = ({
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
           Split Your Expenses
         </h1>
-        <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+        <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
           Add expenses for each person and calculate how much everyone owes each other.
         </p>
       </div>
@@ -67,7 +67,7 @@ const ExpenseInputForm = ({
             placeholder="Enter expense name (e.g., Dinner at Restaurant, Trip to Beach)"
             value={expenseName}
             onChange={(e) => setExpenseName(e.target.value)}
-            className="text-lg"
+            className="text-base md:text-lg min-h-[44px]"
           />
         </CardContent>
       </Card>
@@ -87,10 +87,11 @@ const ExpenseInputForm = ({
                     variant="outline"
                     size="sm"
                     onClick={() => removePerson(personIndex)}
-                    className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 min-h-[40px] px-3"
                   >
-                    <Minus className="w-4 h-4" />
-                    Remove Person
+                    <Minus className="w-4 h-4 mr-1" />
+                    <span className="hidden sm:inline">Remove Person</span>
+                    <span className="sm:hidden">Remove</span>
                   </Button>
                 )}
               </CardTitle>
@@ -105,7 +106,7 @@ const ExpenseInputForm = ({
                   placeholder="Enter person's name"
                   value={person.name}
                   onChange={(e) => updatePersonName(personIndex, e.target.value)}
-                  className="text-lg"
+                  className="text-base md:text-lg min-h-[44px]"
                 />
               </div>
 
@@ -114,39 +115,42 @@ const ExpenseInputForm = ({
                   Expenses
                 </label>
                 {person.expenses.map((expense, expenseIndex) => (
-                  <div key={expenseIndex} className="flex gap-3 items-end">
+                  <div key={expenseIndex} className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
                     <div className="flex-1">
                       <Input
                         type="text"
                         placeholder="Description (optional)"
                         value={expense.description}
                         onChange={(e) => updateExpense(personIndex, expenseIndex, 'description', e.target.value)}
+                        className="min-h-[44px]"
                       />
                     </div>
-                    <div className="w-32">
-                      <div className="relative">
-                        <IndianRupee className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          type="number"
-                          placeholder="Amount"
-                          value={expense.amountPaid || ''}
-                          onChange={(e) => updateExpense(personIndex, expenseIndex, 'amountPaid', parseFloat(e.target.value) || 0)}
-                          className="pl-8"
-                          min="0"
-                          step="0.01"
-                        />
+                    <div className="flex gap-2 items-end">
+                      <div className="flex-1 sm:w-32">
+                        <div className="relative">
+                          <IndianRupee className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            type="number"
+                            placeholder="Amount"
+                            value={expense.amountPaid || ''}
+                            onChange={(e) => updateExpense(personIndex, expenseIndex, 'amountPaid', parseFloat(e.target.value) || 0)}
+                            className="pl-8 min-h-[44px]"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
                       </div>
+                      {person.expenses.length > 1 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeExpense(personIndex, expenseIndex)}
+                          className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 min-h-[44px] min-w-[44px] px-2"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
-                    {person.expenses.length > 1 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeExpense(personIndex, expenseIndex)}
-                        className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                    )}
                   </div>
                 ))}
                 
@@ -154,7 +158,7 @@ const ExpenseInputForm = ({
                   variant="outline"
                   size="sm"
                   onClick={() => addExpense(personIndex)}
-                  className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 min-h-[40px]"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Expense
@@ -177,7 +181,7 @@ const ExpenseInputForm = ({
         <Button
           variant="outline"
           onClick={addPerson}
-          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all duration-300"
+          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all duration-300 min-h-[48px] px-6"
         >
           <Plus className="w-5 h-5 mr-2" />
           Add Another Person
@@ -187,21 +191,21 @@ const ExpenseInputForm = ({
       {/* Summary Card */}
       <Card className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 border-2 border-violet-200 dark:border-violet-800">
         <CardContent className="py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="text-center sm:text-left">
+              <p className="text-base md:text-lg font-semibold text-gray-900 dark:text-white">
                 Total Expense: ₹{totalExpense.toFixed(2)}
               </p>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">
                 {people.length} people • ₹{(totalExpense / people.length).toFixed(2)} per person
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               {!isGuestMode && (
                 <Button
                   variant="outline"
                   onClick={onSave}
-                  className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm"
+                  className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm min-h-[48px] w-full sm:w-auto"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Save
@@ -210,15 +214,15 @@ const ExpenseInputForm = ({
               <Button
                 onClick={onCalculate}
                 disabled={isCalculating}
-                className="bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 hover:from-violet-600 hover:via-purple-600 hover:to-blue-600 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform"
+                className="bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 hover:from-violet-600 hover:via-purple-600 hover:to-blue-600 text-white px-6 md:px-8 py-3 text-base md:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform min-h-[48px] w-full sm:w-auto"
               >
                 {isCalculating ? (
-                  <div className="flex items-center">
+                  <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Calculating...
                   </div>
                 ) : (
-                  <div className="flex items-center">
+                  <div className="flex items-center justify-center">
                     <Calculator className="w-5 h-5 mr-2" />
                     Calculate Split
                   </div>
