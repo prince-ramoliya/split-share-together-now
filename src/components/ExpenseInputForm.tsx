@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Plus, Minus, Calculator, Save, Users, DollarSign, FileText } from 'lucide-react';
+import { Plus, Minus, Calculator, Save, Users, IndianRupee, FileText } from 'lucide-react';
 import { Person, ExpenseRecord } from '../utils/expenseCalculations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,7 +125,7 @@ const ExpenseInputForm = ({
                     </div>
                     <div className="w-32">
                       <div className="relative">
-                        <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <IndianRupee className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                           type="number"
                           placeholder="Amount"
