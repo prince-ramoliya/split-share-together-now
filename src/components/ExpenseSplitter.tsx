@@ -331,27 +331,46 @@ const ExpenseSplitter = () => {
   })() : null;
 
   return (
-    <div className="min-h-screen font-dm-sans relative overflow-hidden bg-background transition-all duration-500">
-      {/* Minimal Background Pattern */}
+    <div className="min-h-screen font-dm-sans relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-800 dark:to-purple-900 transition-all duration-500">
+      {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:24px_24px] opacity-30"></div>
+        {/* Floating Circles */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-blue-200 to-purple-200 dark:from-blue-800 dark:to-purple-800 rounded-full opacity-20 animate-float"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-purple-200 to-pink-200 dark:from-purple-800 dark:to-pink-800 rounded-full opacity-30 animate-float" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-20 left-20 w-40 h-40 bg-gradient-to-r from-cyan-200 to-blue-200 dark:from-cyan-800 dark:to-blue-800 rounded-full opacity-25 animate-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-40 right-10 w-20 h-20 bg-gradient-to-r from-green-200 to-teal-200 dark:from-green-800 dark:to-teal-800 rounded-full opacity-35 animate-float" style={{animationDelay: '0.5s'}}></div>
         
-        {/* Minimal Geometric Shapes */}
-        <div className="absolute top-20 left-10 w-24 h-24 border border-border rounded-lg opacity-20 rotate-12"></div>
-        <div className="absolute top-40 right-20 w-16 h-16 border border-border rounded-full opacity-25"></div>
-        <div className="absolute bottom-20 right-16 w-20 h-20 border border-border rotate-45 opacity-20"></div>
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
       </div>
 
       {/* Top Navigation */}
       <div className="absolute top-6 right-6 z-10 flex items-center space-x-3">
+        {!isGuestMode && (
+          <Button
+            variant="outline"
+            onClick={() => setCurrentView('history')}
+            className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-2 border-white/20 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
+          >
+            <History className="h-4 w-4 mr-2" />
+            History
+          </Button>
+        )}
         <Button
           variant="outline"
           size="icon"
           onClick={toggleTheme}
-          className="bg-card/80 backdrop-blur-sm border hover:bg-accent transition-colors"
+          className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-2 border-white/20 hover:scale-110 hover:bg-white dark:hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl"
         >
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleSignOut}
+          className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-2 border-white/20 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+        >
+          {isGuestMode ? <User className="h-4 w-4 mr-2" /> : <LogOut className="h-4 w-4 mr-2" />}
+          {isGuestMode ? 'Sign In' : 'Sign Out'}
         </Button>
       </div>
 
