@@ -347,7 +347,7 @@ const ExpenseSplitter = () => {
       </div>
 
       {/* Top Navigation */}
-      <div className="absolute top-4 right-4 z-10 flex items-center space-x-2 md:space-x-3 md:top-6 md:right-6">
+      <div className="absolute top-4 right-4 z-20 flex items-center space-x-1 sm:space-x-2 md:space-x-3 md:top-6 md:right-6">
         {!isGuestMode && (
           <Button
             variant="outline"
@@ -378,7 +378,7 @@ const ExpenseSplitter = () => {
 
       {/* Guest Mode Indicator */}
       {isGuestMode && (
-        <div className="absolute top-4 left-4 z-10 md:top-6 md:left-6">
+        <div className="absolute top-4 left-4 z-20 md:top-6 md:left-6">
           <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 px-2 py-1 md:px-3 rounded-full text-xs md:text-sm font-medium border border-amber-200 dark:border-amber-800">
             <span className="hidden sm:inline">Guest Mode - History disabled</span>
             <span className="sm:hidden">Guest</span>
@@ -386,7 +386,7 @@ const ExpenseSplitter = () => {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
+      <div className="container mx-auto px-4 pt-20 pb-8 md:pt-8 max-w-4xl relative z-10">
         {currentStep === 'landing' && (
           <LandingPage
             numberOfPeople={numberOfPeople}

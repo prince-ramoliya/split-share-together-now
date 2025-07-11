@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@clerk/clerk-react';
 import { Person } from './expenseCalculations';
 
 export const saveExpenseHistory = async (

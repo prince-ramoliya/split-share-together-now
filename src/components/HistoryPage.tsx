@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit2, Trash2, Calendar, Users, DollarSign, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '../hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,25 +24,29 @@ interface HistoryPageProps {
 }
 
 const HistoryPage = ({ onBack, onLoadExpense }: HistoryPageProps) => {
+  const { user } = useAuth();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
 
   useEffect(() => {
-    fetchHistory();
-  }, []);
+    if (user) {
+      fetchHistory();
+    }
+  }, [user]);
 
   const fetchHistory = async () => {
     try {
-      // Get current user from Clerk
-      const response = await fetch('/api/user'); // We'll need to create this endpoint or use Clerk's user ID
-      // For now, we'll use a temporary solution - in production you'd want to use Clerk webhooks
-      // to sync user data to your database
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       
       const { data, error } = await supabase
         .from('expense_history')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
