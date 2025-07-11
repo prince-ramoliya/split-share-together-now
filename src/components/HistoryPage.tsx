@@ -34,6 +34,11 @@ const HistoryPage = ({ onBack, onLoadExpense }: HistoryPageProps) => {
 
   const fetchHistory = async () => {
     try {
+      // Get current user from Clerk
+      const response = await fetch('/api/user'); // We'll need to create this endpoint or use Clerk's user ID
+      // For now, we'll use a temporary solution - in production you'd want to use Clerk webhooks
+      // to sync user data to your database
+      
       const { data, error } = await supabase
         .from('expense_history')
         .select('*')

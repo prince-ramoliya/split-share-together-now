@@ -1,24 +1,24 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@clerk/clerk-react';
 import { Person } from './expenseCalculations';
 
 export const saveExpenseHistory = async (
   people: Person[],
   totalExpense: number,
   perPersonShare: number,
-  name: string = 'Untitled Split'
+  name: string = 'Untitled Split',
+  userId?: string
 ) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
+    if (!userId) {
       throw new Error('User not authenticated');
     }
 
     const { error } = await supabase
       .from('expense_history')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         name,
         expense_data: people as any, // Type cast to satisfy Json requirement
         total_expense: totalExpense,

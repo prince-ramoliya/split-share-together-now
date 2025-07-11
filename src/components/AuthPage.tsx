@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Calculator, UserX } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import React from 'react';
+import { SignIn, SignUp, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { Calculator, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 
@@ -12,65 +11,14 @@ interface AuthPageProps {
 }
 
 const AuthPage = ({ onAuthSuccess, onSkipAuth }: AuthPageProps) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    fullName: ''
-  });
+  const [isLogin, setIsLogin] = React.useState(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: "Welcome back!",
-          description: "You've been signed in successfully.",
-        });
-        onAuthSuccess();
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              full_name: formData.fullName
-            }
-          }
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account.",
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  // Component to handle auto-redirect when signed in
+  const AutoRedirect = () => {
+    React.useEffect(() => {
+      onAuthSuccess();
+    }, []);
+    return null;
   };
 
   const handleSkipAuth = () => {
@@ -92,142 +40,106 @@ const AuthPage = ({ onAuthSuccess, onSkipAuth }: AuthPageProps) => {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-md relative z-10 flex items-center justify-center min-h-screen">
-        <Card className="w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-white/20 shadow-xl">
-          <CardHeader className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <Calculator className="w-8 h-8 text-white" />
-            </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-              {isLogin ? 'Welcome Back' : 'Join Split Expenses'}
-            </CardTitle>
-            <p className="text-gray-600 dark:text-gray-300">
-              {isLogin ? 'Sign in to your account' : 'Create your account to get started'}
-            </p>
-          </CardHeader>
+      <SignedIn>
+        <AutoRedirect />
+      </SignedIn>
 
-          <CardContent className="space-y-6">
-            {/* Skip Authentication Button */}
-            <Button
-              onClick={handleSkipAuth}
-              variant="outline"
-              className="w-full py-3 text-lg font-semibold rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-300 transition-all duration-300"
-            >
-              <div className="flex items-center">
-                <UserX className="w-5 h-5 mr-3" />
-                Continue as Guest
+      <SignedOut>
+        <div className="container mx-auto px-4 py-8 max-w-md relative z-10 flex items-center justify-center min-h-screen">
+          <Card className="w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-white/20 shadow-xl">
+            <CardHeader className="text-center space-y-4">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <Calculator className="w-8 h-8 text-white" />
               </div>
-            </Button>
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
+                {isLogin ? 'Welcome Back' : 'Join Split Expenses'}
+              </CardTitle>
+              <p className="text-gray-600 dark:text-gray-300">
+                {isLogin ? 'Sign in to your account' : 'Create your account to get started'}
+              </p>
+            </CardHeader>
 
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-300 dark:border-gray-600" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
-                  Or sign in to save history
-                </span>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Full Name *
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Enter your full name"
-                      value={formData.fullName}
-                      onChange={(e) => handleInputChange('fullName', e.target.value)}
-                      className="pl-10"
-                      required={!isLogin}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Email *
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Password *
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="pl-10 pr-10"
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff /> : <Eye />}
-                  </button>
-                </div>
-              </div>
-
+            <CardContent className="space-y-6">
+              {/* Skip Authentication Button */}
               <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 hover:from-violet-600 hover:via-purple-600 hover:to-blue-600 text-white py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform relative overflow-hidden group"
+                onClick={handleSkipAuth}
+                variant="outline"
+                className="w-full py-3 text-lg font-semibold rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-300 transition-all duration-300"
               >
-                {loading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Processing...
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    {isLogin ? 'Sign In' : 'Create Account'}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </div>
-                )}
+                <div className="flex items-center">
+                  <UserX className="w-5 h-5 mr-3" />
+                  Continue as Guest
+                </div>
               </Button>
-            </form>
 
-            <div className="text-center">
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 font-medium transition-colors"
-              >
-                {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-              </button>
-            </div>
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+                    Or sign in to save history
+                  </span>
+                </div>
+              </div>
 
-            {/* Guest Mode Notice */}
-            <div className="text-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-              <strong>Guest Mode:</strong> Split expenses without signing up, but you won't be able to save or access history.
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              {/* Clerk Auth Components */}
+              <div className="flex flex-col space-y-4">
+                <div className="flex justify-center space-x-2 mb-4">
+                  <Button
+                    variant={isLogin ? "default" : "outline"}
+                    onClick={() => setIsLogin(true)}
+                    className="flex-1"
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    variant={!isLogin ? "default" : "outline"}
+                    onClick={() => setIsLogin(false)}
+                    className="flex-1"
+                  >
+                    Sign Up
+                  </Button>
+                </div>
+                
+                <div className="flex justify-center">
+                  {isLogin ? (
+                    <SignIn 
+                      fallbackRedirectUrl="/"
+                      appearance={{
+                        elements: {
+                          formButtonPrimary: 'bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 hover:from-violet-600 hover:via-purple-600 hover:to-blue-600',
+                          card: 'shadow-none bg-transparent',
+                          headerTitle: 'hidden',
+                          headerSubtitle: 'hidden'
+                        }
+                      }}
+                    />
+                  ) : (
+                    <SignUp 
+                      fallbackRedirectUrl="/"
+                      appearance={{
+                        elements: {
+                          formButtonPrimary: 'bg-gradient-to-r from-violet-500 via-purple-500 to-blue-500 hover:from-violet-600 hover:via-purple-600 hover:to-blue-600',
+                          card: 'shadow-none bg-transparent',
+                          headerTitle: 'hidden',
+                          headerSubtitle: 'hidden'
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Guest Mode Notice */}
+              <div className="text-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                <strong>Guest Mode:</strong> Split expenses without signing up, but you won't be able to save or access history.
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </SignedOut>
     </div>
   );
 };

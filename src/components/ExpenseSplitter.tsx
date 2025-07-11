@@ -67,7 +67,8 @@ const ExpenseSplitter = () => {
           people,
           results.totalExpense,
           results.perPersonShare,
-          expenseName || 'Untitled Split'
+          expenseName || 'Untitled Split',
+          user.id
         );
 
         if (saveResult.success) {
@@ -149,7 +150,8 @@ const ExpenseSplitter = () => {
       people,
       results.totalExpense,
       results.perPersonShare,
-      expenseName || 'Untitled Split'
+      expenseName || 'Untitled Split',
+      user?.id
     );
 
     if (saveResult.success) {
