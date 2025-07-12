@@ -19,7 +19,6 @@ interface ExpenseSplitResults {
 interface ResultsPageProps {
   results: ExpenseSplitResults;
   onShareWhatsApp: () => void;
-  onSave: () => void;
   onEdit: () => void;
   onReset: () => void;
   isGuestMode?: boolean;
@@ -28,7 +27,6 @@ interface ResultsPageProps {
 const ResultsPage = ({ 
   results, 
   onShareWhatsApp, 
-  onSave, 
   onEdit, 
   onReset,
   isGuestMode = false
@@ -207,16 +205,6 @@ const ResultsPage = ({
             Edit Expenses
           </Button>
 
-          {!isGuestMode && (
-            <Button
-              variant="outline"
-              onClick={onSave}
-              className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save to History
-            </Button>
-          )}
 
           <Button
             onClick={copyResults}

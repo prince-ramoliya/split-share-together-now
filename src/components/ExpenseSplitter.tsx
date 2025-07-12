@@ -407,7 +407,6 @@ const ExpenseSplitter = () => {
           <ResultsPage
             results={results}
             onShareWhatsApp={shareOnWhatsApp}
-            onSave={handleSaveExpense}
             onEdit={() => setCurrentStep('input')}
             onReset={resetApp}
             isGuestMode={isGuestMode}
