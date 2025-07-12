@@ -1,6 +1,5 @@
 
-import * as React from 'react';
-const { createContext, useContext, useEffect, useState } = React;
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';
 
@@ -12,11 +11,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  console.log('ThemeProvider: Starting, React available:', !!React);
-  console.log('ThemeProvider: useState available:', !!useState);
-  
   const [theme, setTheme] = useState<Theme>(() => {
-    console.log('ThemeProvider: Inside useState initializer');
     const savedTheme = localStorage.getItem('expense-splitter-theme') as Theme;
     return savedTheme || 'light';
   });

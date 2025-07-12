@@ -1,9 +1,14 @@
 
-import * as React from 'react';
+import React from 'react';
+import { ThemeProvider } from '../contexts/ThemeContext';
 import ExpenseSplitter from '../components/ExpenseSplitter';
 
 const Index = () => {
-  return <ExpenseSplitter />;
+  return (
+    <ThemeProvider>
+      <ExpenseSplitter />
+    </ThemeProvider>
+  );
 };
 
 export default Index;

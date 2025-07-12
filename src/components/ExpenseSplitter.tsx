@@ -1,6 +1,5 @@
 
-import * as React from 'react';
-const { useState, useEffect } = React;
+import React, { useState, useEffect } from 'react';
 import { Sun, Moon, History, LogOut, User } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
@@ -349,6 +348,16 @@ const ExpenseSplitter = () => {
 
       {/* Top Navigation */}
       <div className="absolute top-4 right-4 z-20 flex items-center space-x-1 sm:space-x-2 md:space-x-3 md:top-6 md:right-6">
+        {!isGuestMode && (
+          <Button
+            variant="outline"
+            onClick={() => setCurrentView('history')}
+            className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-2 border-white/20 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl text-sm md:text-base min-h-[44px] px-3 md:px-4"
+          >
+            <History className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">History</span>
+          </Button>
+        )}
         <Button
           variant="outline"
           size="icon"
@@ -408,6 +417,7 @@ const ExpenseSplitter = () => {
           <ResultsPage
             results={results}
             onShareWhatsApp={shareOnWhatsApp}
+            onSave={handleSaveExpense}
             onEdit={() => setCurrentStep('input')}
             onReset={resetApp}
             isGuestMode={isGuestMode}
