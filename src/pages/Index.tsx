@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import ExpenseSplitter from '../components/ExpenseSplitter';
 
 const Index = () => {

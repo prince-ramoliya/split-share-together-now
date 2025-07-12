@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { createRoot } from 'react-dom/client'
 import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App.tsx'
@@ -9,6 +9,8 @@ const PUBLISHABLE_KEY = "pk_test_c3VwcmVtZS1jcmF3ZGFkLTk1LmNsZXJrLmFjY291bnRzLmR
 if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Clerk Publishable Key");
 }
+
+console.log('main.tsx: About to render, React available:', !!React);
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
