@@ -14,10 +14,13 @@ export const saveExpenseHistory = async (
       throw new Error('User not authenticated');
     }
 
+    // For Clerk users, we need to use the Clerk user ID directly
+    const userIdToSave = userId;
+
     const { error } = await supabase
       .from('expense_history')
       .insert({
-        user_id: userId,
+        user_id: userIdToSave,
         name,
         expense_data: people as any, // Type cast to satisfy Json requirement
         total_expense: totalExpense,
