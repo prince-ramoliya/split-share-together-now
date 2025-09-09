@@ -39,10 +39,11 @@ const ResultsPage = ({
   const copyResults = async () => {
     let copyText = "💰 *Expense Split Summary*\n\n";
     
-    copyText += "💰 *Individual Contributions:*\n";
+    copyText += "📊 *Expense Percentage Breakdown:*\n";
     Object.entries(balances).forEach(([person, balance]) => {
       const amountPaid = balance + perPersonShare;
-      copyText += `• ${person}: ₹${amountPaid.toFixed(2)}\n`;
+      const percentage = totalExpense > 0 ? (amountPaid / totalExpense) * 100 : 0;
+      copyText += `• ${person}: ₹${amountPaid.toFixed(2)} (${percentage.toFixed(1)}%)\n`;
     });
 
     copyText += `\n💸 *Total Expense:* ₹${totalExpense.toFixed(2)}\n`;
@@ -73,76 +74,81 @@ const ResultsPage = ({
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <div className="text-center space-y-4 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-            Expense Split Results
-          </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Summary of expense distribution and settlement requirements.
-          </p>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          Expense Split Results
+        </h1>
+        <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
+          Here's how much everyone owes and who should pay whom.
+        </p>
+      </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="bg-card border">
-            <CardContent className="py-6">
-              <div className="flex items-center">
-                <DollarSign className="w-8 h-8 text-primary mr-3" />
-                <div>
-                  <p className="text-2xl font-bold text-foreground">₹{totalExpense.toFixed(2)}</p>
-                  <p className="text-muted-foreground text-sm">Total Expense</p>
-                </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-800">
+          <CardContent className="py-6">
+            <div className="flex items-center">
+              <DollarSign className="w-8 h-8 text-green-600 mr-3" />
+              <div>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">₹{totalExpense.toFixed(2)}</p>
+                <p className="text-green-600 dark:text-green-300 text-sm">Total Expense</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="bg-card border">
-            <CardContent className="py-6">
-              <div className="flex items-center">
-                <Users className="w-8 h-8 text-primary mr-3" />
-                <div>
-                  <p className="text-2xl font-bold text-foreground">₹{perPersonShare.toFixed(2)}</p>
-                  <p className="text-muted-foreground text-sm">Per Person</p>
-                </div>
+        <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-2 border-blue-200 dark:border-blue-800">
+          <CardContent className="py-6">
+            <div className="flex items-center">
+              <Users className="w-8 h-8 text-blue-600 mr-3" />
+              <div>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">₹{perPersonShare.toFixed(2)}</p>
+                <p className="text-blue-600 dark:text-blue-300 text-sm">Per Person</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="bg-card border">
-            <CardContent className="py-6">
-              <div className="flex items-center">
-                <TrendingUp className="w-8 h-8 text-primary mr-3" />
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{transactions.length}</p>
-                  <p className="text-muted-foreground text-sm">Transactions</p>
-                </div>
+        <Card className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border-2 border-purple-200 dark:border-purple-800">
+          <CardContent className="py-6">
+            <div className="flex items-center">
+              <TrendingUp className="w-8 h-8 text-purple-600 mr-3" />
+              <div>
+                <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">{transactions.length}</p>
+                <p className="text-purple-600 dark:text-purple-300 text-sm">Transactions</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Individual Contributions */}
-      <Card className="bg-card border">
+      {/* Expense Percentage Breakdown */}
+      <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2">
         <CardHeader>
-          <CardTitle className="text-xl text-foreground">Individual Contributions</CardTitle>
+          <CardTitle className="text-xl">Expense Percentage Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3">
             {Object.entries(balances).map(([person, balance]) => {
               // Calculate how much this person paid
               const amountPaid = balance + perPersonShare;
+              const percentage = totalExpense > 0 ? (amountPaid / totalExpense) * 100 : 0;
               
               return (
                 <div
                   key={person}
-                  className="flex justify-between items-center p-4 rounded-lg bg-muted/50 border border-border"
+                  className="flex justify-between items-center p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
                 >
-                  <span className="font-medium text-foreground">{person}</span>
-                  <span className="font-semibold text-foreground text-lg">
-                    ₹{amountPaid.toFixed(2)}
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900 dark:text-white">{person}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      Paid ₹{amountPaid.toFixed(2)} of total
+                    </span>
+                  </div>
+                  <span className="font-bold text-blue-700 dark:text-blue-400 text-lg">
+                    {percentage.toFixed(1)}%
                   </span>
                 </div>
               );
@@ -151,100 +157,99 @@ const ResultsPage = ({
         </CardContent>
       </Card>
 
-        {/* Transactions */}
-        {transactions.length > 0 && (
-          <Card className="bg-card border mb-8">
-            <CardHeader>
-              <CardTitle className="text-xl text-foreground">Settlement Required</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {transactions.map((transaction, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                        <span className="text-primary-foreground font-bold text-sm">{index + 1}</span>
-                      </div>
-                      <span className="text-foreground">
-                        <strong>{transaction.from}</strong> owes <strong>{transaction.to}</strong>
-                      </span>
+      {/* Transactions */}
+      {transactions.length > 0 && (
+        <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2">
+          <CardHeader>
+            <CardTitle className="text-xl">Who Owes Whom</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {transactions.map((transaction, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">{index + 1}</span>
                     </div>
-                    <span className="font-bold text-foreground text-lg">
-                      ₹{transaction.amount.toFixed(2)}
+                    <span className="text-gray-900 dark:text-white">
+                      <strong>{transaction.from}</strong> owes <strong>{transaction.to}</strong>
                     </span>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  <span className="font-bold text-orange-700 dark:text-orange-400 text-lg">
+                    ₹{transaction.amount.toFixed(2)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8">
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={onEdit}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
+          >
+            <Edit3 className="w-4 h-4 mr-2" />
+            Edit Expenses
+          </Button>
+
+          {!isGuestMode && (
             <Button
               variant="outline"
-              onClick={onEdit}
-              className="min-h-[48px] w-full sm:w-auto"
+              onClick={onSave}
+              className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
             >
-              <Edit3 className="w-4 h-4 mr-2" />
-              Edit Expenses
+              <Save className="w-4 h-4 mr-2" />
+              Save to History
             </Button>
+          )}
 
-            {!isGuestMode && (
-              <Button
-                variant="outline"
-                onClick={onSave}
-                className="min-h-[48px] w-full sm:w-auto"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Save to History
-              </Button>
-            )}
-
-            <Button
-              onClick={copyResults}
-              variant="outline"
-              className="min-h-[48px] w-full sm:w-auto"
-            >
-              <Copy className="w-4 h-4 mr-2" />
-              Copy Results
-            </Button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Button
-              onClick={onShareWhatsApp}
-              className="bg-green-600 hover:bg-green-700 text-white min-h-[48px] w-full sm:w-auto"
-            >
-              <Share className="w-4 h-4 mr-2" />
-              Share on WhatsApp
-            </Button>
-
-            <Button
-              variant="destructive"
-              onClick={onReset}
-              className="min-h-[48px] w-full sm:w-auto"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Start Over
-            </Button>
-          </div>
+          <Button
+            onClick={copyResults}
+            variant="outline"
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
+          >
+            <Copy className="w-4 h-4 mr-2" />
+            Copy Results
+          </Button>
         </div>
 
-        {isGuestMode && (
-          <Card className="bg-muted/50 border border-border">
-            <CardContent className="py-4">
-              <p className="text-muted-foreground text-sm text-center">
-                <strong>Guest Mode:</strong> Sign in to save this expense split to your history and access it later.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button
+            onClick={onShareWhatsApp}
+            className="bg-green-600 hover:bg-green-700 text-white hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
+          >
+            <Share className="w-4 h-4 mr-2" />
+            Share on WhatsApp
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={onReset}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:scale-105 transition-transform duration-200 min-h-[48px] w-full sm:w-auto"
+          >
+            <RotateCcw className="w-4 w-4 mr-2" />
+            Start Over
+          </Button>
+        </div>
       </div>
+
+      {isGuestMode && (
+        <Card className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800">
+          <CardContent className="py-4">
+            <p className="text-amber-800 dark:text-amber-200 text-sm text-center">
+              <strong>Guest Mode:</strong> Sign in to save this expense split to your history and access it later.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
