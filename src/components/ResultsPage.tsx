@@ -39,15 +39,11 @@ const ResultsPage = ({
   const copyResults = async () => {
     let copyText = "💰 *Expense Split Summary*\n\n";
     
-    copyText += "📋 *Individual Balances:*\n";
+    copyText += "📊 *Expense Percentage Breakdown:*\n";
     Object.entries(balances).forEach(([person, balance]) => {
-      if (balance > 0) {
-        copyText += `• ${person}: +₹${balance.toFixed(2)} (should receive)\n`;
-      } else if (balance < 0) {
-        copyText += `• ${person}: -₹${Math.abs(balance).toFixed(2)} (owes)\n`;
-      } else {
-        copyText += `• ${person}: ₹0.00 (balanced)\n`;
-      }
+      const amountPaid = balance + perPersonShare;
+      const percentage = totalExpense > 0 ? (amountPaid / totalExpense) * 100 : 0;
+      copyText += `• ${person}: ₹${amountPaid.toFixed(2)} (${percentage.toFixed(1)}%)\n`;
     });
 
     copyText += `\n💸 *Total Expense:* ₹${totalExpense.toFixed(2)}\n`;
@@ -128,38 +124,35 @@ const ResultsPage = ({
         </Card>
       </div>
 
-      {/* Individual Balances */}
+      {/* Expense Percentage Breakdown */}
       <Card className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2">
         <CardHeader>
-          <CardTitle className="text-xl">Individual Balances</CardTitle>
+          <CardTitle className="text-xl">Expense Percentage Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3">
-            {Object.entries(balances).map(([person, balance]) => (
-              <div
-                key={person}
-                className={`flex justify-between items-center p-4 rounded-lg ${
-                  balance > 0
-                    ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-                    : balance < 0
-                    ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
-                    : 'bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600'
-                }`}
-              >
-                <span className="font-medium text-gray-900 dark:text-white">{person}</span>
-                <span
-                  className={`font-bold ${
-                    balance > 0
-                      ? 'text-green-700 dark:text-green-400'
-                      : balance < 0
-                      ? 'text-red-700 dark:text-red-400'
-                      : 'text-gray-700 dark:text-gray-300'
-                  }`}
+            {Object.entries(balances).map(([person, balance]) => {
+              // Calculate how much this person paid
+              const amountPaid = balance + perPersonShare;
+              const percentage = totalExpense > 0 ? (amountPaid / totalExpense) * 100 : 0;
+              
+              return (
+                <div
+                  key={person}
+                  className="flex justify-between items-center p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
                 >
-                  {balance > 0 ? `+₹${balance.toFixed(2)}` : balance < 0 ? `-₹${Math.abs(balance).toFixed(2)}` : '₹0.00'}
-                </span>
-              </div>
-            ))}
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900 dark:text-white">{person}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      Paid ₹{amountPaid.toFixed(2)} of total
+                    </span>
+                  </div>
+                  <span className="font-bold text-blue-700 dark:text-blue-400 text-lg">
+                    {percentage.toFixed(1)}%
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
